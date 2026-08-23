@@ -240,7 +240,7 @@ fn spawn_character(
         p.spawn((
             Text2d::new(""),
             TextFont {
-                font: asset_server.load("fonts/FiraSans-Bold.ttf").into(),
+                font: asset_server.load("fonts/NotoSansSC.ttf").into(),
                 font_size: FontSize::Px(15.0),
                 ..default()
             },
@@ -295,7 +295,7 @@ fn tick_patience(
                 fx.write(FxEvent {
                     kind: FxKind::Fizzle,
                     pos: Vec2::new(COUNTER_POS.x + 60.0, COUNTER_POS.y + 70.0),
-                    text: Some("customer left".into()),
+                    text: Some("顾客离开了".into()),
                 });
             }
         }
@@ -334,7 +334,7 @@ fn accept_order(
         fx.write(FxEvent {
             kind: FxKind::Fizzle,
             pos: Vec2::new(COUNTER_POS.x + 60.0, COUNTER_POS.y + 80.0),
-            text: Some("Need ingredients!".into()),
+            text: Some("缺少材料！".into()),
         });
         return;
     }

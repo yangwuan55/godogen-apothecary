@@ -58,7 +58,7 @@ fn market_purchase(
             fx.write(FxEvent {
                 kind: FxKind::Fizzle,
                 pos: Vec2::new(300.0, 200.0),
-                text: Some("Shelf full".into()),
+                text: Some("货架已满！".into()),
             });
             continue;
         }
@@ -70,13 +70,13 @@ fn market_purchase(
             fx.write(FxEvent {
                 kind: FxKind::GoldText,
                 pos: Vec2::new(300.0, 200.0),
-                text: Some(format!("Bought {}x {}", qty, mat.name)),
+                text: Some(format!("购入 {}x{}", mat.name, qty)),
             });
         } else {
             fx.write(FxEvent {
                 kind: FxKind::Fizzle,
                 pos: Vec2::new(300.0, 200.0),
-                text: Some("Not enough gold".into()),
+                text: Some("金币不足！".into()),
             });
         }
     }
@@ -111,13 +111,13 @@ fn upgrade_purchase(
                 fx.write(FxEvent {
                     kind: FxKind::GoldText,
                     pos: Vec2::new(300.0, 300.0),
-                    text: Some(format!("{} -> lvl {}", def.name, up.levels[i])),
+                    text: Some(format!("{} 升至 {} 级", def.name, up.levels[i])),
                 });
             } else {
                 fx.write(FxEvent {
                     kind: FxKind::Fizzle,
                     pos: Vec2::new(300.0, 300.0),
-                    text: Some("Not enough gold".into()),
+                    text: Some("金币不足！".into()),
                 });
             }
         }

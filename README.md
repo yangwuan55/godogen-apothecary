@@ -1,96 +1,86 @@
-# The Alchemist's Apothecary
+# 炼金药铺（The Alchemist's Apothecary）
 
-A complete 2D potion-shop management sim built with **Bevy 0.19** and generated
-through the **godogen** pipeline (`publish.sh --engine bevy --agent prime`).
+一款完整的 2D 药铺模拟经营游戏，基于 **Bevy 0.19** 开发，由 **godogen** 流程（`publish.sh --engine bevy --agent prime`）生成。
 
-You run a struggling alchemist's shop: buy ingredients, serve a queue of
-customers, brew potions by managing temperature and stirring, and grow your
-reputation until the nobility — and the Alchemist's Guild — come calling.
+你经营一间挣扎求生的小药铺：进货原料、服务排队的顾客、通过控制温度和搅拌熬制药剂，一步步积累声望，直到贵族与炼金公会登门造访。
 
-## Core loop
+## 核心循环
 
 ```
-Buy materials -> customers order -> brew (temp + stir) -> deliver -> gold + reputation
-      ^                                                              |
-      +------------------ unlock recipes / upgrade shop <------------+
+进货原料 -> 顾客下单 -> 熬制（温度 + 搅拌）-> 出货 -> 金币 + 声望
+      ^                                          |
+      +----- 解锁配方 / 升级店铺 <----------------+
 ```
 
-- **Day cycle**: a fixed-length day ticks by; each served potion earns gold and
-  reputation, and every night **rent is due**.
-- **Reputation gates content**: richer, more demanding customers and higher-tier
-  recipes unlock as your reputation grows.
-- **Lose & win conditions**: run out of gold at day end => bankruptcy;
-  reach reputation level 10 => victory.
+- **每日循环**：一天固定时长；每卖出一瓶药获得金币与声望，每天结束时**需要交房租**。
+- **声望解锁内容**：声望越高，解锁更高阶配方与更挑剔（也更富有）的顾客。
+- **胜败条件**：每天结束时金币不足 => 破产；声望升到 10 级 => 通关。
 
-## Controls
+## 操作
 
-| Key                | Action                                  |
-|--------------------|-----------------------------------------|
-| `Enter`            | Start game / accept a customer's order  |
-| `Tab`              | Cycle panels (Market / Upgrades / Recipe Book / shop) |
-| `1..9`             | Buy material / buy upgrade (in panels)  |
-| `↑` / `↓`          | Raise / lower cauldron temperature      |
-| `Space`            | Stir the cauldron                       |
+| 按键      | 作用                              |
+|-----------|-----------------------------------|
+| `Enter`   | 开始游戏 / 接单                   |
+| `Tab`     | 循环面板（市场 / 升级 / 配方书 / 店铺）|
+| `1..9`、`0`、`-`、`=` | 购买材料 / 升级（在面板内）|
+| `↑` / `↓` | 升高 / 降低坩埚温度               |
+| `Space`   | 搅拌坩埚                          |
 
-## Game content
+## 游戏内容
 
-- **12 ingredients** across 3 tiers (Mandrake Root … Abyss Salt).
-- **14 recipes** across 3 tiers (Healing Draught … Phoenix Tears), each with an
-  ideal temperature window, brew time and stir requirements.
-- **7 customer archetypes** (Farmer, Child, Merchant, Knight, Mage, Noble,
-  Alchemist) with different budgets, patience and unlocked tiers.
-- **4 shop upgrades** (Cauldron, Furnace, Shelf, Sign), each up to level 3.
-- **Quality system**: Perfect / Good / Normal / Poor potions pay more or less,
-  driven by temperature discipline and stirring coverage.
+- **12 种材料**，分 3 阶（曼德拉草根 … 深渊之盐）。
+- **14 个配方**，分 3 阶（治愈药水 … 凤凰之泪），各有理想温度区间、熬制时间与搅拌要求。
+- **7 类顾客**（农夫、孩童、商人、骑士、法师、贵族、炼金术士），预算、耐心与解锁阶位各不相同。
+- **4 项店铺升级**（坩埚、熔炉、货架、招牌），每项最高 3 级。
+- **品质系统**：完美 / 良好 / 普通 / 劣质的药水收益不同，由温度把握与搅拌覆盖决定。
 
-## Procedural art (no external assets)
+## 程序化美术（无外部资源）
 
-Everything is drawn at runtime with Bevy primitives:
+所有画面均由 Bevy 图元在运行时绘制：
 
-| Element       | Built from                                              |
-|---------------|---------------------------------------------------------|
-| Shopfront     | Wood-panelled walls, floor, shelves of colour-coded bottles |
-| Counter       | Wood counter with hinged sections and a serving window  |
-| Cauldron      | Iron pot, liquid surface, floating ingredient colour    |
-| Customers     | Body, head, hat (3 styles) tinted per archetype         |
-| Effects       | Bubbles, sparkles, fizzle puffs, floating gold/quality text |
-| UI panels     | Rounded rects, progress bars (temp + brew), HUD         |
+| 元素     | 构成                                    |
+|----------|-----------------------------------------|
+| 店面     | 木墙、地板、按颜色分类的药瓶货架        |
+| 柜台     | 木质柜台 + 合页台面 + 递药窗口          |
+| 坩埚     | 铁锅、液面、漂浮的材料颜色              |
+| 顾客     | 身体、头、帽子（3 种样式），按职业配色  |
+| 特效     | 气泡、星芒、失败烟尘、飘字（金币/品质） |
+| UI 面板  | 圆角矩形、进度条（温度 + 熬制）、HUD    |
 
-## Run it
+## 运行
 
 ```sh
-# Requires Rust stable (tested with 1.97)
+# 需要 Rust stable（已在 1.97 验证）
 cargo run --release
 ```
 
-## Proof video
+> 注意：请用 `cargo run` 启动。Bevy 0.19 通过 `CARGO_MANIFEST_DIR` 定位 `assets/` 目录，直接运行编译产物会找不到字体文件。
 
-`docs/proof.mp4` (16 s, 720p) shows an autopilot playing a full shop day:
-accepting orders, brewing to the temperature window, auto-stirring, and
-cycling the Market / Upgrades / Recipe Book panels. Regenerate with:
+## 证明视频
+
+`docs/proof.mp4`（16 秒，720p）由 autopilot 自动演示完整一天：接单、控温熬制、自动搅拌，并循环展示市场 / 升级 / 配方书面板。重新生成：
 
 ```sh
 cargo run --bin capture && ffmpeg -y -framerate 30 -i screenshots/result/frame%05d.png -c:v libx264 -pix_fmt yuv420p docs/proof.mp4
 ```
 
-## Architecture
+## 架构
 
 ```
-src/lib.rs          App wiring (build_app exposes plugin tweaks for capture)
-src/main.rs         Normal windowed entry point
-src/bin/capture.rs  Offscreen 30 fps recorder + autopilot (proof video)
+src/lib.rs          App 装配（build_app 暴露插件定制点，供 capture 复用）
+src/main.rs         普通窗口版入口
+src/bin/capture.rs  离屏 30fps 录制 + autopilot（证明视频）
 src/game/
-  core.rs           Plugin assembly, states, title/game-over screens
-  data.rs           Materials, recipes, customer kinds, upgrades, quality
-  resources.rs      Economy, Inventory, Brewing, Customer, FX resources
-  customers.rs      Spawning, queues, patience, order accept/deliver
-  brewing.rs        Temperature/stir mechanics, quality scoring, delivery
-  economy.rs        Day cycle, rent, unlock gating, end conditions
-  panels.rs         Market / Upgrades / Recipe Book tabbed panels
-  ui.rs             HUD, brew panel, day report, end screens
-  visual.rs         Procedural shopfront, cauldron, customer sprites
-  particles.rs      FX spawner + floaters
+  core.rs           插件装配、状态、标题/结束流程
+  data.rs           材料、配方、顾客、升级、品质
+  resources.rs      经济、库存、炼制、顾客、特效资源
+  customers.rs      生成、排队、耐心、接单/出货
+  brewing.rs        温度/搅拌机制、品质评分、出货
+  economy.rs        每日循环、房租、解锁门槛、胜负判定
+  panels.rs         市场 / 升级 / 配方书 Tab 面板
+  ui.rs             HUD、炼药面板、日结算、结束画面
+  visual.rs         程序化店面、坩埚、顾客精灵
+  particles.rs      特效生成 + 飘字
 ```
 
-Built with the **godogen** publish pipeline (Prime Agent layout:
-`AGENTS.md` + `.prime/agent/skills/asset-gen`).
+由 **godogen** 发布流程构建（Prime Agent 布局：`AGENTS.md` + `.prime/agent/skills/asset-gen`）。

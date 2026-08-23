@@ -61,7 +61,7 @@ pub fn update_brewing(
             fx.write(FxEvent {
                 kind: FxKind::Fizzle,
                 pos: Vec2::new(560.0, 240.0),
-                text: Some("BURNT!".into()),
+                text: Some("烧焦了！".into()),
             });
         }
     } else {

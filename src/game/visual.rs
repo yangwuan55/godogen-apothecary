@@ -88,10 +88,11 @@ fn build_shop_scene(mut commands: Commands, asset_server: Res<AssetServer>) {
             ));
             // Sign
             p.spawn((
-                Text2d::new("✦ The Alchemist's Apothecary ✦"),
+                Text2d::new("✦ 炼金药铺 ✦"),
                 TextFont {
-                    font: asset_server.load("fonts/FiraSans-Bold.ttf").into(),
-                    font_size: FontSize::Px(30.0),
+                    font: asset_server.load("fonts/NotoSansSC.ttf").into(),
+                    font_size: FontSize::Px(36.0),
+                    weight: FontWeight::BOLD,
                     ..default()
                 },
                 TextColor(Color::srgb(0.98, 0.80, 0.35)),

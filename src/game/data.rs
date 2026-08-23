@@ -19,84 +19,84 @@ pub struct MaterialDef {
 
 pub const MATERIALS: [MaterialDef; NUM_MATERIALS] = [
     MaterialDef {
-        name: "Mandrake Root",
+        name: "曼德拉草根",
         cost: 3,
         tier: 1,
         color: Color::srgb(0.55, 0.85, 0.35),
         emoji: '🌿',
     },
     MaterialDef {
-        name: "Moonpetal",
+        name: "月光花瓣",
         cost: 4,
         tier: 1,
         color: Color::srgb(0.80, 0.60, 0.95),
         emoji: '🌸',
     },
     MaterialDef {
-        name: "Iron Moss",
+        name: "铁苔藓",
         cost: 5,
         tier: 1,
         color: Color::srgb(0.45, 0.55, 0.50),
         emoji: '🍄',
     },
     MaterialDef {
-        name: "Foxglove",
+        name: "毛地黄",
         cost: 6,
         tier: 1,
         color: Color::srgb(0.95, 0.55, 0.40),
         emoji: '🪻',
     },
     MaterialDef {
-        name: "Basilisk Scale",
+        name: "蛇妖鳞",
         cost: 12,
         tier: 2,
         color: Color::srgb(0.35, 0.80, 0.60),
         emoji: '🦎',
     },
     MaterialDef {
-        name: "Phoenix Feather",
+        name: "凤凰羽",
         cost: 14,
         tier: 2,
         color: Color::srgb(0.95, 0.45, 0.25),
         emoji: '🔥',
     },
     MaterialDef {
-        name: "Void Crystal",
+        name: "虚空水晶",
         cost: 16,
         tier: 2,
         color: Color::srgb(0.35, 0.30, 0.70),
         emoji: '🔮',
     },
     MaterialDef {
-        name: "Griffin Claw",
+        name: "狮鹫爪",
         cost: 18,
         tier: 2,
         color: Color::srgb(0.85, 0.75, 0.40),
         emoji: '🦅',
     },
     MaterialDef {
-        name: "Dragon's Blood",
+        name: "龙之血",
         cost: 30,
         tier: 3,
         color: Color::srgb(0.75, 0.15, 0.20),
         emoji: '🐉',
     },
     MaterialDef {
-        name: "Star Shard",
+        name: "星辉碎片",
         cost: 34,
         tier: 3,
         color: Color::srgb(0.60, 0.80, 1.00),
         emoji: '⭐',
     },
     MaterialDef {
-        name: "Unicorn Horn",
+        name: "独角兽角",
         cost: 38,
         tier: 3,
         color: Color::srgb(0.95, 0.90, 0.80),
         emoji: '🦄',
     },
     MaterialDef {
-        name: "Abyss Salt",
+        name: "深渊之盐",
         cost: 42,
         tier: 3,
         color: Color::srgb(0.25, 0.30, 0.45),
@@ -122,7 +122,7 @@ pub struct RecipeDef {
 
 pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
     RecipeDef {
-        name: "Healing Draught",
+        name: "治愈药水",
         mats: &[0, 1],
         base_price: 15,
         temp_min: 40.0,
@@ -133,7 +133,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
         color: Color::srgb(0.30, 0.85, 0.45),
     },
     RecipeDef {
-        name: "Mana Elixir",
+        name: "魔力药剂",
         mats: &[1, 2],
         base_price: 18,
         temp_min: 50.0,
@@ -144,7 +144,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
         color: Color::srgb(0.35, 0.50, 0.95),
     },
     RecipeDef {
-        name: "Strength Tonic",
+        name: "力量药水",
         mats: &[2, 3],
         base_price: 20,
         temp_min: 45.0,
@@ -155,7 +155,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
         color: Color::srgb(0.85, 0.40, 0.30),
     },
     RecipeDef {
-        name: "Night Vision Brew",
+        name: "夜视药剂",
         mats: &[0, 4],
         base_price: 30,
         temp_min: 35.0,
@@ -166,7 +166,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
         color: Color::srgb(0.30, 0.25, 0.55),
     },
     RecipeDef {
-        name: "Fire Salve",
+        name: "烈焰软膏",
         mats: &[4, 5],
         base_price: 40,
         temp_min: 65.0,
@@ -177,7 +177,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
         color: Color::srgb(0.95, 0.50, 0.15),
     },
     RecipeDef {
-        name: "Frost Balm",
+        name: "冰霜膏",
         mats: &[2, 6],
         base_price: 42,
         temp_min: 15.0,
@@ -188,7 +188,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
         color: Color::srgb(0.55, 0.85, 0.95),
     },
     RecipeDef {
-        name: "Swiftness Syrup",
+        name: "疾速糖浆",
         mats: &[3, 7],
         base_price: 45,
         temp_min: 30.0,
@@ -199,7 +199,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
         color: Color::srgb(0.95, 0.80, 0.30),
     },
     RecipeDef {
-        name: "Heart's Bloom",
+        name: "心花之酿",
         mats: &[1, 11],
         base_price: 55,
         temp_min: 25.0,
@@ -210,7 +210,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
         color: Color::srgb(0.95, 0.45, 0.70),
     },
     RecipeDef {
-        name: "Courage Draught",
+        name: "勇气药水",
         mats: &[7, 8],
         base_price: 70,
         temp_min: 55.0,
@@ -221,7 +221,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
         color: Color::srgb(0.80, 0.30, 0.50),
     },
     RecipeDef {
-        name: "Stone Skin Elixir",
+        name: "石肤药剂",
         mats: &[4, 3, 6],
         base_price: 85,
         temp_min: 40.0,
@@ -232,7 +232,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
         color: Color::srgb(0.60, 0.55, 0.50),
     },
     RecipeDef {
-        name: "Invisibility Potion",
+        name: "隐身药剂",
         mats: &[6, 5],
         base_price: 90,
         temp_min: 20.0,
@@ -243,7 +243,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
         color: Color::srgb(0.50, 0.60, 0.70),
     },
     RecipeDef {
-        name: "Dragon's Breath",
+        name: "龙息药剂",
         mats: &[8, 9],
         base_price: 120,
         temp_min: 70.0,
@@ -254,7 +254,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
         color: Color::srgb(0.95, 0.35, 0.10),
     },
     RecipeDef {
-        name: "True Sight",
+        name: "真视之眼",
         mats: &[6, 11, 9],
         base_price: 150,
         temp_min: 30.0,
@@ -265,7 +265,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
         color: Color::srgb(0.75, 0.55, 1.00),
     },
     RecipeDef {
-        name: "Phoenix Tears",
+        name: "凤凰之泪",
         mats: &[5, 9, 8],
         base_price: 220,
         temp_min: 50.0,
@@ -297,7 +297,7 @@ pub struct CustomerKind {
 
 pub const CUSTOMER_KINDS: [CustomerKind; 7] = [
     CustomerKind {
-        name: "Farmer",
+        name: "农夫",
         budget_min: 8,
         budget_max: 25,
         patience: 32.0,
@@ -309,7 +309,7 @@ pub const CUSTOMER_KINDS: [CustomerKind; 7] = [
         hat_style: 1,
     },
     CustomerKind {
-        name: "Child",
+        name: "孩童",
         budget_min: 5,
         budget_max: 16,
         patience: 40.0,
@@ -321,7 +321,7 @@ pub const CUSTOMER_KINDS: [CustomerKind; 7] = [
         hat_style: 1,
     },
     CustomerKind {
-        name: "Merchant",
+        name: "商人",
         budget_min: 20,
         budget_max: 45,
         patience: 26.0,
@@ -333,7 +333,7 @@ pub const CUSTOMER_KINDS: [CustomerKind; 7] = [
         hat_style: 0,
     },
     CustomerKind {
-        name: "Knight",
+        name: "骑士",
         budget_min: 35,
         budget_max: 80,
         patience: 22.0,
@@ -345,7 +345,7 @@ pub const CUSTOMER_KINDS: [CustomerKind; 7] = [
         hat_style: 0,
     },
     CustomerKind {
-        name: "Mage",
+        name: "法师",
         budget_min: 50,
         budget_max: 120,
         patience: 16.0,
@@ -357,7 +357,7 @@ pub const CUSTOMER_KINDS: [CustomerKind; 7] = [
         hat_style: 2,
     },
     CustomerKind {
-        name: "Noble",
+        name: "贵族",
         budget_min: 80,
         budget_max: 200,
         patience: 12.0,
@@ -369,7 +369,7 @@ pub const CUSTOMER_KINDS: [CustomerKind; 7] = [
         hat_style: 3,
     },
     CustomerKind {
-        name: "Alchemist",
+        name: "炼金术士",
         budget_min: 150,
         budget_max: 300,
         patience: 10.0,
@@ -405,29 +405,29 @@ pub struct UpgradeDef {
 pub const UPGRADES: [UpgradeDef; 4] = [
     UpgradeDef {
         id: UpgradeId::Cauldron,
-        name: "Cauldron",
-        desc: "Wider temp window + faster brew",
+        name: "坩埚",
+        desc: "更宽的温度区间，熬制更快",
         max_level: 3,
         costs: [30, 75, 160],
     },
     UpgradeDef {
         id: UpgradeId::Furnace,
-        name: "Furnace",
-        desc: "More precise temp control",
+        name: "熔炉",
+        desc: "温度控制更精准",
         max_level: 3,
         costs: [25, 60, 130],
     },
     UpgradeDef {
         id: UpgradeId::Shelf,
-        name: "Shelf",
-        desc: "Bigger inventory capacity",
+        name: "货架",
+        desc: "更大的库存容量",
         max_level: 3,
         costs: [20, 50, 110],
     },
     UpgradeDef {
         id: UpgradeId::Sign,
-        name: "Sign",
-        desc: "More customers per day + rep",
+        name: "招牌",
+        desc: "每天更多顾客 + 声望",
         max_level: 3,
         costs: [35, 85, 180],
     },
@@ -453,10 +453,10 @@ pub enum Quality {
 impl Quality {
     pub fn label(&self) -> &'static str {
         match self {
-            Quality::Poor => "Poor",
-            Quality::Normal => "Normal",
-            Quality::Good => "Good",
-            Quality::Perfect => "Perfect",
+            Quality::Poor => "劣质",
+            Quality::Normal => "普通",
+            Quality::Good => "良好",
+            Quality::Perfect => "完美",
         }
     }
     pub fn price_mult(&self) -> f32 {

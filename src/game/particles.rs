@@ -66,8 +66,9 @@ fn spawn_from_fx(
                     commands.spawn((
                         Text2d::new(txt.clone()),
                         TextFont {
-                            font: asset_server.load("fonts/FiraSans-Bold.ttf").into(),
+                            font: asset_server.load("fonts/NotoSansSC.ttf").into(),
                             font_size: FontSize::Px(22.0),
+                            weight: FontWeight::BOLD,
                             ..default()
                         },
                         TextColor(color),

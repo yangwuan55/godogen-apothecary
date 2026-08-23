@@ -31,6 +31,15 @@ struct CaptureTarget {
     frame: u32,
 }
 
+/// Tracks which captured frame the autopilot has already driven. The schedule
+/// runner catch-up loop can run several `Update`s for the same captured frame
+/// (the async screenshot gates `capture_frame`), so without this guard a single
+/// Tab/Enter press would repeat once per extra update and flip multiple panels.
+#[derive(Resource, Default)]
+struct AutopilotState {
+    acted_on: u32,
+}
+
 fn main() {
     let mut app = build_app(|plugins| {
         plugins
@@ -44,10 +53,16 @@ fn main() {
     app.insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_secs_f32(
         1.0 / 30.0,
     )))
+    // Sync the fixed-timestep loop with the 30 fps capture cadence so autopilot
+    // and state transitions run exactly once per captured frame (otherwise the
+    // default 1/60 fixed timestep runs the update twice per frame and a single
+    // Tab press can flip two panels at once).
+    .insert_resource(Time::<Fixed>::from_hz(30.0))
     .insert_resource(godogen_apothecary::game::core::WindowCamera(false))
     .add_plugins(ScheduleRunnerPlugin::run_loop(Duration::from_secs_f64(
         1.0 / 30.0,
     )))
+    .init_resource::<AutopilotState>()
     .add_systems(Startup, capture_setup)
     .add_systems(PreUpdate, autopilot.after(bevy::input::InputSystems))
     .add_systems(Update, capture_frame)
@@ -93,6 +108,7 @@ fn capture_frame(
 /// through the three panels to showcase them.
 fn autopilot(
     mut input: ResMut<ButtonInput<KeyCode>>,
+    mut ap: ResMut<AutopilotState>,
     mut brewing: ResMut<Brewing>,
     state: Res<State<GameScreen>>,
     customers: Query<&Customer>,
@@ -107,6 +123,10 @@ fn autopilot(
     input.release(KeyCode::Space);
 
     let f = target.frame;
+    if ap.acted_on == f {
+        return;
+    }
+    ap.acted_on = f;
 
     match *state.get() {
         GameScreen::Title => {
