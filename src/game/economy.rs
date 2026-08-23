@@ -1,27 +1,42 @@
 //! Day cycle, settlement, and game-over/victory checks.
 
-use super::resources::{Customer, CustomerQueue, Economy, GameScreen};
+use super::actions::{InputSet, UiAction};
+use super::resources::{Customer, CustomerQueue, Economy, ForceDayEnd, GameScreen, Paused};
 use bevy::prelude::*;
 
 pub struct EconomyPlugin;
 
 impl Plugin for EconomyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, day_clock.run_if(in_state(GameScreen::Playing)));
         app.add_systems(
             Update,
-            day_report_continue.run_if(in_state(GameScreen::DayReport)),
+            day_clock
+                .run_if(in_state(GameScreen::Playing))
+                .run_if(not_paused),
         );
         app.add_systems(
             Update,
-            end_screen_continue
-                .run_if(in_state(GameScreen::GameOver).or_else(in_state(GameScreen::Victory))),
+            day_report_continue
+                .after(InputSet)
+                .run_if(in_state(GameScreen::DayReport)),
         );
     }
 }
 
+fn not_paused(paused: Res<Paused>) -> bool {
+    !paused.0
+}
+
 /// Advance the in-day clock; at the end settle rent and show the day report.
-fn day_clock(mut next: ResMut<NextState<GameScreen>>, mut econ: ResMut<Economy>, time: Res<Time>) {
+fn day_clock(
+    mut next: ResMut<NextState<GameScreen>>,
+    mut econ: ResMut<Economy>,
+    time: Res<Time>,
+    force: Res<ForceDayEnd>,
+) {
+    if force.0 {
+        econ.day_elapsed = econ.day_length;
+    }
     econ.day_elapsed += time.delta_secs();
     if econ.day_elapsed >= econ.day_length {
         if econ.gold >= econ.rent {
@@ -36,16 +51,22 @@ fn day_clock(mut next: ResMut<NextState<GameScreen>>, mut econ: ResMut<Economy>,
     }
 }
 
-/// On the report screen Enter/Space starts the next day, or victory / game over.
+/// On the report screen, 继续营业 starts the next day (or victory).
 fn day_report_continue(
     mut commands: Commands,
-    input: Res<ButtonInput<KeyCode>>,
+    mut actions: MessageReader<UiAction>,
     mut next: ResMut<NextState<GameScreen>>,
     mut econ: ResMut<Economy>,
     customers: Query<Entity, With<Customer>>,
     mut queue: ResMut<CustomerQueue>,
 ) {
-    if !(input.just_pressed(KeyCode::Enter) || input.just_pressed(KeyCode::Space)) {
+    let mut continue_day = false;
+    for a in actions.read() {
+        if *a == UiAction::Continue {
+            continue_day = true;
+        }
+    }
+    if !continue_day {
         return;
     }
     if econ.rep_level >= 10 {
@@ -60,12 +81,7 @@ fn day_report_continue(
     econ.day += 1;
     econ.day_elapsed = 0.0;
     econ.day_income = 0;
+    econ.day_quality = [0; 4];
     econ.rent += 1;
     next.set(GameScreen::Playing);
-}
-
-fn end_screen_continue(input: Res<ButtonInput<KeyCode>>, mut next: ResMut<NextState<GameScreen>>) {
-    if input.just_pressed(KeyCode::Enter) || input.just_pressed(KeyCode::Space) {
-        next.set(GameScreen::Title);
-    }
 }

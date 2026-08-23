@@ -1,10 +1,13 @@
 //! Core plugin: resources, state, plugins, scene setup, title flow.
 
+use super::actions::{InputPlugin, InputSet, UiAction};
+use super::audio::GameAudioPlugin;
 use super::customers::CustomersPlugin;
 use super::economy::EconomyPlugin;
 use super::panels::PanelsPlugin;
 use super::particles::ParticlesPlugin;
 use super::resources::*;
+use super::tutorial::TutorialPlugin;
 use super::ui::UiPlugin;
 use super::visual::VisualPlugin;
 use bevy::prelude::*;
@@ -21,16 +24,27 @@ impl Plugin for CorePlugin {
             .insert_resource(Brewing::new())
             .insert_resource(CustomerQueue::new())
             .insert_resource(WindowCamera(true))
+            .insert_resource(Paused::default())
+            .insert_resource(TempControl::default())
+            .insert_resource(TutorialSettings::default())
             .add_plugins((
+                InputPlugin,
                 CustomersPlugin,
                 EconomyPlugin,
                 PanelsPlugin,
                 UiPlugin,
                 ParticlesPlugin,
                 VisualPlugin,
+                TutorialPlugin,
+                GameAudioPlugin,
             ))
             .add_systems(Startup, setup)
-            .add_systems(Update, title_start.run_if(in_state(GameScreen::Title)));
+            .add_systems(
+                Update,
+                title_start
+                    .after(InputSet)
+                    .run_if(in_state(GameScreen::Title)),
+            );
     }
 }
 
@@ -48,9 +62,12 @@ fn setup(mut commands: Commands, window_camera: Res<WindowCamera>) {
     commands.spawn(Camera2d);
 }
 
-/// Enter begins the game from the title screen.
-fn title_start(input: Res<ButtonInput<KeyCode>>, mut next: ResMut<NextState<GameScreen>>) {
-    if input.just_pressed(KeyCode::Enter) {
+/// Starting the game from the title screen (button click or Enter key).
+fn title_start(
+    mut actions: MessageReader<UiAction>,
+    mut next: ResMut<NextState<GameScreen>>,
+) {
+    if actions.read().any(|a| *a == UiAction::StartGame) {
         next.set(GameScreen::Playing);
     }
 }

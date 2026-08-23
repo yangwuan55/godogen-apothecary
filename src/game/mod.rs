@@ -1,3 +1,5 @@
+pub mod actions;
+pub mod audio;
 pub mod brewing;
 pub mod core;
 pub mod customers;
@@ -6,5 +8,7 @@ pub mod economy;
 pub mod panels;
 pub mod particles;
 pub mod resources;
+pub mod tutorial;
 pub mod ui;
+pub mod ui_kit;
 pub mod visual;

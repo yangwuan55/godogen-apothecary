@@ -1,16 +1,22 @@
-//! Customer spawning, movement, patience, and order acceptance.
+//! Customer spawning, movement, patience, order acceptance, speech bubbles.
 
+use super::actions::{InputSet, UiAction};
+use super::audio::SfxRequest;
 use super::brewing::update_brewing;
 use super::data::{CUSTOMER_KINDS, RECIPES, UpgradeId};
 use super::resources::{
     Brewing, Customer, CustomerQueue, CustomerState, Economy, FxEvent, FxKind, GameScreen,
-    Inventory, UpgradesState,
+    Inventory, Paused, UpgradesState,
 };
 use bevy::prelude::*;
 
 /// Front-of-line position (counter).
-pub const COUNTER_POS: Vec2 = Vec2::new(300.0, -60.0);
+pub const COUNTER_POS: Vec2 = Vec2::new(-215.0, -60.0);
 pub const QUEUE_OFFSET: f32 = 118.0;
+
+/// Marker on a customer's speech bubble so it can be updated each frame.
+#[derive(Component)]
+pub struct CustomerBubble;
 
 pub struct CustomersPlugin;
 
@@ -25,12 +31,21 @@ impl Plugin for CustomersPlugin {
                 accept_order,
                 advance_queue,
                 leave_customers,
+                update_bubbles,
             )
                 .chain()
-                .run_if(in_state(GameScreen::Playing)),
+                .after(InputSet)
+                .run_if(playing_and_not_paused),
         );
-        app.add_systems(Update, update_brewing.run_if(in_state(GameScreen::Playing)));
+        app.add_systems(
+            Update,
+            update_brewing.after(InputSet).run_if(playing_and_not_paused),
+        );
     }
+}
+
+fn playing_and_not_paused(state: Res<State<GameScreen>>, paused: Res<Paused>) -> bool {
+    *state.get() == GameScreen::Playing && !paused.0
 }
 
 fn sign_capacity(sign_lvl: u8) -> u32 {
@@ -77,7 +92,6 @@ fn spawn_one_customer(
     asset_server: &AssetServer,
     slot: u32,
 ) {
-    // Pick a kind unlocked at this reputation.
     let unlocked: Vec<usize> = CUSTOMER_KINDS
         .iter()
         .enumerate()
@@ -236,7 +250,7 @@ fn spawn_character(
             }
             _ => {}
         }
-        // Order bubble (text updated by bubble_system).
+        // Speech bubble (content updated by `update_bubbles`).
         p.spawn((
             Text2d::new(""),
             TextFont {
@@ -245,33 +259,44 @@ fn spawn_character(
                 ..default()
             },
             TextColor(Color::srgb(0.95, 0.95, 1.0)),
-            TextBackgroundColor(Color::srgba(0.1, 0.12, 0.25, 0.85)),
-            Transform::from_xyz(0.0, 66.0, 4.0),
+            TextBackgroundColor(Color::srgba(0.10, 0.12, 0.25, 0.88)),
+            CustomerBubble,
+            Transform::from_xyz(0.0, 68.0, 4.0),
         ));
     });
 }
 
-/// Move customers toward their queue target; walk off screen when leaving/served.
+/// Move customers along their path to the queue target; walking-off customers
+/// head for the exit. A small bob is applied *on top of* the path position so
+/// the vertical movement is never swallowed by the bob.
 fn move_customers(time: Res<Time>, mut q: Query<(&mut Customer, &mut Transform)>) {
+    let dt = time.delta_secs();
     for (mut c, mut t) in &mut q {
-        let target = if c.state == CustomerState::Leaving || c.state == CustomerState::Served {
+        let target = if c.state == CustomerState::Leaving {
             Vec3::new(1150.0, 80.0, 10.0)
         } else {
             Vec3::new(c.target_pos.x, c.target_pos.y, 10.0)
         };
         let cur = t.translation;
         let d = target - cur;
-        if d.length() > 2.0 {
-            let speed = 130.0;
-            t.translation = cur + d.normalize() * (speed * time.delta_secs()).min(d.length());
-        } else if c.state == CustomerState::Walking {
-            c.state = CustomerState::Waiting;
+        let step = 130.0 * dt;
+        if d.length() > step && step > 0.0 {
+            t.translation = cur + d.normalize() * step;
+        } else {
+            t.translation = target;
+            if c.state == CustomerState::Walking {
+                c.state = CustomerState::Waiting;
+            }
         }
-        // Gentle walk bob while moving.
-        if c.state == CustomerState::Walking {
-            c.wobble += time.delta_secs() * 9.0;
-            t.translation.y = cur.y + (c.wobble).sin() * 2.0;
-        }
+        // Gentle bob on top of the path (never resets the path movement).
+        c.wobble += dt * 9.0;
+        let bob = match c.state {
+            CustomerState::Walking => (c.wobble).sin() * 2.0,
+            CustomerState::Waiting => (c.wobble * 0.5).sin() * 1.5,
+            CustomerState::Served => (c.wobble * 1.4).sin() * 3.0,
+            CustomerState::Leaving => (c.wobble).sin() * 2.0,
+        };
+        t.translation.y += bob;
     }
 }
 
@@ -302,17 +327,17 @@ fn tick_patience(
     }
 }
 
-/// Accept the front customer's order with Enter/E.
+/// Accept the front customer's order (mouse 接单 button or Enter/E).
 fn accept_order(
-    input: Res<ButtonInput<KeyCode>>,
+    mut actions: MessageReader<UiAction>,
     mut brewing: ResMut<Brewing>,
     mut inv: ResMut<Inventory>,
     _up: Res<UpgradesState>,
     mut q: Query<(Entity, &mut Customer)>,
     mut fx: MessageWriter<FxEvent>,
+    mut sfx: MessageWriter<SfxRequest>,
 ) {
-    if brewing.active || !(input.just_pressed(KeyCode::Enter) || input.just_pressed(KeyCode::KeyE))
-    {
+    if brewing.active || !actions.read().any(|a| *a == UiAction::AcceptOrder) {
         return;
     }
     // Front = smallest queue_slot among Waiting.
@@ -336,6 +361,7 @@ fn accept_order(
             pos: Vec2::new(COUNTER_POS.x + 60.0, COUNTER_POS.y + 80.0),
             text: Some("缺少材料！".into()),
         });
+        sfx.write(SfxRequest::Error);
         return;
     }
     for &m in recipe.mats {
@@ -355,9 +381,8 @@ fn accept_order(
     cust.state = CustomerState::Served;
 }
 
-/// After a served/left customer clears the counter, everyone behind moves up one slot.
+/// After a served/left customer clears the counter, everyone behind moves up.
 fn advance_queue(mut q: Query<&mut Customer>) {
-    // Reassign slots so the front is 0 whenever no one at slot 0 is served/waiting at the counter.
     let mut serving: Vec<u32> = Vec::new();
     for c in q.iter() {
         if c.state == CustomerState::Waiting || c.state == CustomerState::Served {
@@ -370,7 +395,6 @@ fn advance_queue(mut q: Query<&mut Customer>) {
     serving.sort_unstable();
     let min_slot = serving[0];
     if min_slot > 0 {
-        // Everyone shifts left.
         for mut c in q.iter_mut() {
             if c.state == CustomerState::Waiting || c.state == CustomerState::Served {
                 if c.queue_slot > 0 {
@@ -392,6 +416,70 @@ fn leave_customers(mut commands: Commands, q: Query<(Entity, &Customer, &Transfo
             && t.translation.x > 1120.0
         {
             commands.entity(e).despawn();
+        }
+    }
+}
+
+/// Keep each customer's speech bubble in sync with their state.
+fn update_bubbles(
+    customers: Query<(&Customer, &Children)>,
+    mut bubbles: Query<(
+        &mut Text2d,
+        &mut TextColor,
+        &mut TextBackgroundColor,
+        &mut Transform,
+    )>,
+) {
+    for (c, children) in &customers {
+        for child in children {
+            if let Ok((mut text, mut color, mut bg, mut t)) = bubbles.get_mut(*child) {
+                let ratio = (c.patience / c.patience_max).clamp(0.0, 1.0);
+                let urgent = ratio < 0.25 && (c.state == CustomerState::Waiting || c.state == CustomerState::Served);
+                let (txt, txt_col, bg_col) = match c.state {
+                    CustomerState::Walking => {
+                        ("".to_string(), Color::srgb(0.95, 0.95, 1.0), Color::srgba(0.10, 0.12, 0.25, 0.88))
+                    }
+                    CustomerState::Waiting => {
+                        let recipe = &RECIPES[c.recipe_idx];
+                        if urgent {
+                            (
+                                "快一点！我要走了！".to_string(),
+                                Color::srgb(1.0, 0.45, 0.45),
+                                Color::srgba(0.35, 0.06, 0.06, 0.92),
+                            )
+                        } else {
+                            (
+                                format!("想要「{}」", recipe.name),
+                                Color::srgb(0.95, 0.95, 1.0),
+                                Color::srgba(0.10, 0.12, 0.25, 0.88),
+                            )
+                        }
+                    }
+                    CustomerState::Served => {
+                        if urgent {
+                            ("还没好吗？！".to_string(), Color::srgb(1.0, 0.45, 0.45), Color::srgba(0.35, 0.06, 0.06, 0.92))
+                        } else {
+                            ("在熬了…".to_string(), Color::srgb(0.9, 0.9, 0.95), Color::srgba(0.10, 0.12, 0.25, 0.88))
+                        }
+                    }
+                    CustomerState::Leaving => (
+                        "等不及了…".to_string(),
+                        Color::srgb(0.6, 0.6, 0.7),
+                        Color::srgba(0.08, 0.08, 0.12, 0.85),
+                    ),
+                };
+                text.0 = txt;
+                color.0 = txt_col;
+                bg.0 = bg_col;
+                // Fade & shrink the bubble slightly while leaving.
+                if c.state == CustomerState::Leaving {
+                    let a = ((t.translation.x - 1120.0) / 150.0).clamp(0.15, 1.0);
+                    let s = 0.7 + 0.3 * a;
+                    t.scale = Vec3::splat(s);
+                } else {
+                    t.scale = Vec3::ONE;
+                }
+            }
         }
     }
 }

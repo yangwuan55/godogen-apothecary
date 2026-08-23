@@ -30,6 +30,10 @@ pub struct Economy {
     pub served: u32,
     pub lost: u32,
     pub perfect_count: u32,
+    /// Quality distribution of today's deliveries: [Poor, Normal, Good, Perfect].
+    pub day_quality: [u32; 4],
+    /// Total restock purchases this run (used by the tutorial).
+    pub purchases: u32,
 }
 
 impl Economy {
@@ -46,6 +50,8 @@ impl Economy {
             served: 0,
             lost: 0,
             perfect_count: 0,
+            day_quality: [0; 4],
+            purchases: 0,
         }
     }
 
@@ -198,4 +204,34 @@ pub enum FxKind {
     QualityText,
     LevelUp,
     Fizzle,
+}
+
+/// Global pause flag. When true, gameplay systems freeze; the pause overlay UI
+/// stays interactive so the player can resume / return to title / quit.
+#[derive(Resource, Default)]
+pub struct Paused(pub bool);
+
+/// Capture-only cheat: force the current day to end immediately.
+#[derive(Resource, Default)]
+pub struct ForceDayEnd(pub bool);
+
+/// Current temperature-control intent, set by both keyboard (hold ↑/↓) and
+/// mouse (hold the +/− buttons). `brewing::update_brewing` reads this instead
+/// of polling the keyboard directly, so both input channels behave identically.
+#[derive(Resource, Default)]
+pub struct TempControl {
+    pub up: bool,
+    pub down: bool,
+}
+
+/// Master switch for the in-game tutorial hints. The offscreen capture binary
+/// sets this to `false` so the proof video is deterministic.
+#[derive(Resource)]
+pub struct TutorialSettings {
+    pub enabled: bool,
+}
+impl Default for TutorialSettings {
+    fn default() -> Self {
+        Self { enabled: true }
+    }
 }

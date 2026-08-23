@@ -2,9 +2,10 @@
 name = "godogen-apothecary"
 version = "0.1.0"
 edition = "2024"
+default-run = "godogen-apothecary"
 
 [dependencies]
-bevy = "0.19.1"
+bevy = { version = "0.19.1", features = ["wav"] }
 # Enable the ICU4X CJK word-segmentation model (LSTM) so Chinese/Japanese text
 # lays out correctly with Bevy 0.19's parley text stack.
 icu_segmenter = { version = "2.3.0", features = ["auto"] }
