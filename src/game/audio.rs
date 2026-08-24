@@ -41,10 +41,7 @@ impl Plugin for GameAudioPlugin {
     fn build(&self, app: &mut App) {
         app.add_message::<SfxRequest>();
         app.add_systems(Startup, setup_sfx);
-        app.add_systems(
-            Update,
-            (play_sfx, click_on_action.after(InputSet)),
-        );
+        app.add_systems(Update, (play_sfx, click_on_action.after(InputSet)));
     }
 }
 
@@ -192,11 +189,7 @@ fn setup_sfx(mut commands: Commands, mut assets: ResMut<Assets<AudioSource>>) {
 }
 
 /// Play requested one-shots.
-fn play_sfx(
-    mut requests: MessageReader<SfxRequest>,
-    sfx: Res<Sfx>,
-    mut commands: Commands,
-) {
+fn play_sfx(mut requests: MessageReader<SfxRequest>, sfx: Res<Sfx>, mut commands: Commands) {
     for r in requests.read() {
         let handle = match r {
             SfxRequest::Click => &sfx.click,
@@ -218,10 +211,7 @@ fn play_sfx(
 }
 
 /// Every user action gets a soft click as immediate tactile feedback.
-fn click_on_action(
-    mut actions: MessageReader<UiAction>,
-    mut sfx: MessageWriter<SfxRequest>,
-) {
+fn click_on_action(mut actions: MessageReader<UiAction>, mut sfx: MessageWriter<SfxRequest>) {
     if actions.read().next().is_some() {
         sfx.write(SfxRequest::Click);
     }

@@ -4,10 +4,12 @@
 //! mouse via `actions::collect_input`), stir is a discrete `UiAction::Stir`.
 
 use super::actions::UiAction;
+use super::audio::SfxRequest;
 use super::customers::COUNTER_POS;
 use super::data::{Quality, RECIPES, UpgradeId, quality_from_score};
-use super::audio::SfxRequest;
-use super::resources::{Brewing, Customer, CustomerState, Economy, FxEvent, FxKind, TempControl, UpgradesState};
+use super::resources::{
+    Brewing, Customer, CustomerState, Economy, FxEvent, FxKind, TempControl, UpgradesState,
+};
 use bevy::prelude::*;
 
 /// Update an active brew. Finishes it (earning gold/rep) when progress completes.

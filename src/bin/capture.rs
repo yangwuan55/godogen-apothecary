@@ -18,7 +18,9 @@ use bevy::window::{ExitCondition, WindowPlugin};
 use bevy::winit::WinitPlugin;
 use godogen_apothecary::build_app;
 use godogen_apothecary::game::data::RECIPES;
-use godogen_apothecary::game::resources::{Brewing, Customer, CustomerState, ForceDayEnd, GameScreen};
+use godogen_apothecary::game::resources::{
+    Brewing, Customer, CustomerState, ForceDayEnd, GameScreen,
+};
 use std::time::Duration;
 
 const W: u32 = 1280;
@@ -59,9 +61,7 @@ fn main() {
     // Tab press can flip two panels at once).
     .insert_resource(Time::<Fixed>::from_hz(30.0))
     .insert_resource(godogen_apothecary::game::core::WindowCamera(false))
-    .insert_resource(godogen_apothecary::game::resources::TutorialSettings {
-        enabled: false,
-    })
+    .insert_resource(godogen_apothecary::game::resources::TutorialSettings { enabled: false })
     .add_plugins(ScheduleRunnerPlugin::run_loop(Duration::from_secs_f64(
         1.0 / 30.0,
     )))
@@ -139,29 +139,28 @@ fn autopilot(
     }
     ap.acted_on = f;
 
-
     // ---- Scripted one-shot inputs (frame-driven, independent of current
     // state, so a Tab that should open the market fires even if a previous
     // press already moved us there). --------------------------------
     let script: &[(u32, Option<KeyCode>, Option<bool>)] = &[
-        (20, Some(KeyCode::Enter), None), // Title -> Playing
-        (120, Some(KeyCode::Tab), None), // -> Market  (visit #1)
-        (128, Some(KeyCode::Digit1), None), // buy material 0
+        (20, Some(KeyCode::Enter), None),         // Title -> Playing
+        (120, Some(KeyCode::Tab), None),          // -> Market  (visit #1)
+        (128, Some(KeyCode::Digit1), None),       // buy material 0
         (134, Some(KeyCode::BracketRight), None), // qty +1
-        (140, Some(KeyCode::Digit1), None), // buy again (2 units)
-        (148, Some(KeyCode::Tab), None), // -> Upgrades
-        (156, Some(KeyCode::Digit2), None), // buy Furnace if affordable
-        (164, Some(KeyCode::Tab), None), // -> RecipeBook
-        (172, Some(KeyCode::Tab), None), // -> Playing
-        (300, Some(KeyCode::Tab), None), // -> Market  (visit #2)
-        (308, Some(KeyCode::Digit3), None), // buy material 2
-        (316, Some(KeyCode::Tab), None), // -> Upgrades
-        (324, Some(KeyCode::Digit1), None), // buy Cauldron if affordable
-        (332, Some(KeyCode::Tab), None), // -> RecipeBook
-        (340, Some(KeyCode::Tab), None), // -> Playing
-        (420, Some(KeyCode::Escape), None), // pause overlay
-        (432, Some(KeyCode::Escape), None), // resume
-        (460, None, Some(true)), // force day end
+        (140, Some(KeyCode::Digit1), None),       // buy again (2 units)
+        (148, Some(KeyCode::Tab), None),          // -> Upgrades
+        (156, Some(KeyCode::Digit2), None),       // buy Furnace if affordable
+        (164, Some(KeyCode::Tab), None),          // -> RecipeBook
+        (172, Some(KeyCode::Tab), None),          // -> Playing
+        (300, Some(KeyCode::Tab), None),          // -> Market  (visit #2)
+        (308, Some(KeyCode::Digit3), None),       // buy material 2
+        (316, Some(KeyCode::Tab), None),          // -> Upgrades
+        (324, Some(KeyCode::Digit1), None),       // buy Cauldron if affordable
+        (332, Some(KeyCode::Tab), None),          // -> RecipeBook
+        (340, Some(KeyCode::Tab), None),          // -> Playing
+        (420, Some(KeyCode::Escape), None),       // pause overlay
+        (432, Some(KeyCode::Escape), None),       // resume
+        (460, None, Some(true)),                  // force day end
         (470, Some(KeyCode::Enter), Some(false)), // continue to day 2
     ];
     for (sf, key, flag) in script {

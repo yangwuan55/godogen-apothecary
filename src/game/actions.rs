@@ -84,20 +84,46 @@ fn collect_input(
             continue;
         }
         match kind {
-            ButtonKind::Start => { writer.write(UiAction::StartGame); }
-            ButtonKind::AcceptOrder => { writer.write(UiAction::AcceptOrder); }
-            ButtonKind::Stir => { writer.write(UiAction::Stir); }
+            ButtonKind::Start => {
+                writer.write(UiAction::StartGame);
+            }
+            ButtonKind::AcceptOrder => {
+                writer.write(UiAction::AcceptOrder);
+            }
+            ButtonKind::Stir => {
+                writer.write(UiAction::Stir);
+            }
             ButtonKind::TempUp | ButtonKind::TempDown => {} // handled via hold
-            ButtonKind::QtyInc => { writer.write(UiAction::QtyInc); }
-            ButtonKind::QtyDec => { writer.write(UiAction::QtyDec); }
-            ButtonKind::BuyMaterial(i) => { writer.write(UiAction::BuyMaterial(*i)); }
-            ButtonKind::BuyUpgrade(i) => { writer.write(UiAction::BuyUpgrade(*i)); }
-            ButtonKind::OpenPanel(p) => { writer.write(UiAction::OpenPanel(*p)); }
-            ButtonKind::Pause => { writer.write(UiAction::Pause); }
-            ButtonKind::Resume => { writer.write(UiAction::Resume); }
-            ButtonKind::Continue => { writer.write(UiAction::Continue); }
-            ButtonKind::Restart => { writer.write(UiAction::Restart); }
-            ButtonKind::Quit => { writer.write(UiAction::Quit); }
+            ButtonKind::QtyInc => {
+                writer.write(UiAction::QtyInc);
+            }
+            ButtonKind::QtyDec => {
+                writer.write(UiAction::QtyDec);
+            }
+            ButtonKind::BuyMaterial(i) => {
+                writer.write(UiAction::BuyMaterial(*i));
+            }
+            ButtonKind::BuyUpgrade(i) => {
+                writer.write(UiAction::BuyUpgrade(*i));
+            }
+            ButtonKind::OpenPanel(p) => {
+                writer.write(UiAction::OpenPanel(*p));
+            }
+            ButtonKind::Pause => {
+                writer.write(UiAction::Pause);
+            }
+            ButtonKind::Resume => {
+                writer.write(UiAction::Resume);
+            }
+            ButtonKind::Continue => {
+                writer.write(UiAction::Continue);
+            }
+            ButtonKind::Restart => {
+                writer.write(UiAction::Restart);
+            }
+            ButtonKind::Quit => {
+                writer.write(UiAction::Quit);
+            }
         }
     }
 

@@ -2,9 +2,7 @@
 //! All game UI (HUD, panels, tutorial, pause) is built from these primitives so
 //! colors, radii, fonts and interaction states stay consistent everywhere.
 
-use super::data::{
-    MATERIALS, SHELF_CAPACITY, UPGRADES, UpgradeId,
-};
+use super::data::{MATERIALS, SHELF_CAPACITY, UPGRADES, UpgradeId};
 use super::resources::{
     Brewing, Customer, CustomerState, Economy, GameScreen, Inventory, Paused, UpgradesState,
 };
@@ -147,9 +145,7 @@ pub fn refresh_buttons(
     mut label_colors: Query<&mut TextColor>,
 ) {
     let cap = SHELF_CAPACITY[up.level(UpgradeId::Shelf) as usize];
-    let front_waiting = customers
-        .iter()
-        .any(|c| c.state == CustomerState::Waiting);
+    let front_waiting = customers.iter().any(|c| c.state == CustomerState::Waiting);
 
     for (kind, inter, mut bg, mut border, disabled, children) in &mut q {
         let (enabled, accent) = match kind {
@@ -162,10 +158,7 @@ pub fn refresh_buttons(
             ButtonKind::BuyMaterial(i) => {
                 let m = &MATERIALS[*i];
                 let qty = inv.restock_qty;
-                (
-                    inv.counts[*i] < cap && econ.gold >= m.cost * qty,
-                    C_GREEN,
-                )
+                (inv.counts[*i] < cap && econ.gold >= m.cost * qty, C_GREEN)
             }
             ButtonKind::BuyUpgrade(i) => {
                 let def = &UPGRADES[*i];
@@ -174,13 +167,18 @@ pub fn refresh_buttons(
                 (aff, C_GOLD)
             }
             ButtonKind::Continue => (true, C_GREEN),
-            ButtonKind::OpenPanel(_) | ButtonKind::Pause | ButtonKind::Resume | ButtonKind::Restart => {
-                (true, C_BORDER_HI)
-            }
+            ButtonKind::OpenPanel(_)
+            | ButtonKind::Pause
+            | ButtonKind::Resume
+            | ButtonKind::Restart => (true, C_BORDER_HI),
             ButtonKind::Quit => (true, C_RED),
         };
 
-        let base = if enabled && disabled.is_none() { accent } else { C_DISABLED };
+        let base = if enabled && disabled.is_none() {
+            accent
+        } else {
+            C_DISABLED
+        };
         let mut bg_col = base;
         let mut border_col = C_BORDER;
         match inter {

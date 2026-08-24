@@ -4,7 +4,9 @@
 //! messages from `actions.rs`.
 
 use super::actions::{InputSet, UiAction};
-use super::data::{MATERIALS, NUM_MATERIALS, RECIPES, REP_THRESHOLDS, SHELF_CAPACITY, UPGRADES, UpgradeId};
+use super::data::{
+    MATERIALS, NUM_MATERIALS, RECIPES, REP_THRESHOLDS, SHELF_CAPACITY, UPGRADES, UpgradeId,
+};
 use super::resources::*;
 use super::ui_kit::*;
 use bevy::app::AppExit;
@@ -124,15 +126,21 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                 brew_panel(p, &asset_server);
             });
             panel(root, GameScreen::Market, |p| market_panel(p, &asset_server));
-            panel(root, GameScreen::Upgrades, |p| upgrades_panel(p, &asset_server));
+            panel(root, GameScreen::Upgrades, |p| {
+                upgrades_panel(p, &asset_server)
+            });
             panel(root, GameScreen::RecipeBook, |p| {
                 recipe_book_panel(p, &asset_server)
             });
             panel(root, GameScreen::DayReport, |p| {
                 day_report_panel(p, &asset_server)
             });
-            panel(root, GameScreen::GameOver, |p| game_over_panel(p, &asset_server));
-            panel(root, GameScreen::Victory, |p| victory_panel(p, &asset_server));
+            panel(root, GameScreen::GameOver, |p| {
+                game_over_panel(p, &asset_server)
+            });
+            panel(root, GameScreen::Victory, |p| {
+                victory_panel(p, &asset_server)
+            });
             // Always-present overlays (visibility driven separately).
             pause_overlay(root, &asset_server);
             tutorial_banner(root, &asset_server);
@@ -212,7 +220,15 @@ fn title_screen(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
             false,
         );
         ui_text(p, "", 14.0, C_SOFT, assets, false);
-        spawn_button(p, ButtonKind::Start, "开门营业", Val::Px(240.0), 52.0, C_GOLD, assets);
+        spawn_button(
+            p,
+            ButtonKind::Start,
+            "开门营业",
+            Val::Px(240.0),
+            52.0,
+            C_GOLD,
+            assets,
+        );
         ui_text(p, "按 Enter 也可开始", 14.0, C_HINT, assets, false);
     });
 }
@@ -263,10 +279,42 @@ fn hud(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
                 ..default()
             })
             .insert(BackgroundColor(C_BORDER));
-            spawn_button(p, ButtonKind::OpenPanel(GameScreen::Market), "市场", Val::Px(76.0), 34.0, C_BORDER_HI, assets);
-            spawn_button(p, ButtonKind::OpenPanel(GameScreen::Upgrades), "升级", Val::Px(76.0), 34.0, C_BORDER_HI, assets);
-            spawn_button(p, ButtonKind::OpenPanel(GameScreen::RecipeBook), "配方书", Val::Px(86.0), 34.0, C_BORDER_HI, assets);
-            spawn_button(p, ButtonKind::Pause, "暂停", Val::Px(76.0), 34.0, C_BORDER_HI, assets);
+            spawn_button(
+                p,
+                ButtonKind::OpenPanel(GameScreen::Market),
+                "市场",
+                Val::Px(76.0),
+                34.0,
+                C_BORDER_HI,
+                assets,
+            );
+            spawn_button(
+                p,
+                ButtonKind::OpenPanel(GameScreen::Upgrades),
+                "升级",
+                Val::Px(76.0),
+                34.0,
+                C_BORDER_HI,
+                assets,
+            );
+            spawn_button(
+                p,
+                ButtonKind::OpenPanel(GameScreen::RecipeBook),
+                "配方书",
+                Val::Px(86.0),
+                34.0,
+                C_BORDER_HI,
+                assets,
+            );
+            spawn_button(
+                p,
+                ButtonKind::Pause,
+                "暂停",
+                Val::Px(76.0),
+                34.0,
+                C_BORDER_HI,
+                assets,
+            );
         });
     });
 }
@@ -357,7 +405,15 @@ fn brew_panel(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
                 ..default()
             })
             .with_children(|p| {
-                spawn_button(p, ButtonKind::AcceptOrder, "接单", Val::Px(180.0), 40.0, C_GREEN, assets);
+                spawn_button(
+                    p,
+                    ButtonKind::AcceptOrder,
+                    "接单",
+                    Val::Px(180.0),
+                    40.0,
+                    C_GREEN,
+                    assets,
+                );
             });
         });
         // ---- 坩埚 card ----
@@ -423,9 +479,33 @@ fn brew_panel(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
                 ..default()
             })
             .with_children(|p| {
-                spawn_button(p, ButtonKind::TempDown, "降温 ↓", Val::Px(120.0), 42.0, C_BLUE, assets);
-                spawn_button(p, ButtonKind::Stir, "搅拌", Val::Px(120.0), 42.0, C_BLUE, assets);
-                spawn_button(p, ButtonKind::TempUp, "升温 ↑", Val::Px(120.0), 42.0, C_BLUE, assets);
+                spawn_button(
+                    p,
+                    ButtonKind::TempDown,
+                    "降温 ↓",
+                    Val::Px(120.0),
+                    42.0,
+                    C_BLUE,
+                    assets,
+                );
+                spawn_button(
+                    p,
+                    ButtonKind::Stir,
+                    "搅拌",
+                    Val::Px(120.0),
+                    42.0,
+                    C_BLUE,
+                    assets,
+                );
+                spawn_button(
+                    p,
+                    ButtonKind::TempUp,
+                    "升温 ↑",
+                    Val::Px(120.0),
+                    42.0,
+                    C_BLUE,
+                    assets,
+                );
             });
         });
     });
@@ -483,9 +563,25 @@ fn market_panel(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
         })
         .with_children(|p| {
             ui_text(p, "每次购入", 15.0, C_SOFT, assets, false);
-            spawn_button(p, ButtonKind::QtyDec, "−", Val::Px(34.0), 32.0, C_GOLD, assets);
+            spawn_button(
+                p,
+                ButtonKind::QtyDec,
+                "−",
+                Val::Px(34.0),
+                32.0,
+                C_GOLD,
+                assets,
+            );
             marker_text(p, "x1", 16.0, C_TXT, assets, true, MarketQty);
-            spawn_button(p, ButtonKind::QtyInc, "+", Val::Px(34.0), 32.0, C_GOLD, assets);
+            spawn_button(
+                p,
+                ButtonKind::QtyInc,
+                "+",
+                Val::Px(34.0),
+                32.0,
+                C_GOLD,
+                assets,
+            );
             ui_text(p, "  [ ] / [ = ] 键也可调整", 13.0, C_HINT, assets, false);
         });
         // Material rows
@@ -528,14 +624,36 @@ fn market_panel(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
                         BackgroundColor(m.color),
                     ));
                     ui_text(p, m.name, 16.0, C_TXT, assets, false);
-                    ui_text(p, format!("T{}", m.tier).as_str(), 13.0, C_HINT, assets, false);
-                    ui_text(p, format!("{}g/份", m.cost).as_str(), 15.0, C_GOLD, assets, true);
+                    ui_text(
+                        p,
+                        format!("T{}", m.tier).as_str(),
+                        13.0,
+                        C_HINT,
+                        assets,
+                        false,
+                    );
+                    ui_text(
+                        p,
+                        format!("{}g/份", m.cost).as_str(),
+                        15.0,
+                        C_GOLD,
+                        assets,
+                        true,
+                    );
                     p.spawn(Node {
                         flex_grow: 1.0,
                         ..default()
                     });
                     marker_text(p, "库存 0/6", 14.0, C_SOFT, assets, false, MarketStock(i));
-                    spawn_button(p, ButtonKind::BuyMaterial(i), "购入", Val::Px(88.0), 30.0, C_GREEN, assets);
+                    spawn_button(
+                        p,
+                        ButtonKind::BuyMaterial(i),
+                        "购入",
+                        Val::Px(88.0),
+                        30.0,
+                        C_GREEN,
+                        assets,
+                    );
                 });
             }
         });
@@ -548,7 +666,15 @@ fn market_panel(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
         })
         .with_children(|p| {
             marker_text(p, "金币：0g", 18.0, C_GOLD, assets, true, MarketGold);
-            spawn_button(p, ButtonKind::OpenPanel(GameScreen::Playing), "返回柜台", Val::Px(160.0), 42.0, C_BORDER_HI, assets);
+            spawn_button(
+                p,
+                ButtonKind::OpenPanel(GameScreen::Playing),
+                "返回柜台",
+                Val::Px(160.0),
+                42.0,
+                C_BORDER_HI,
+                assets,
+            );
         });
     });
 }
@@ -589,12 +715,28 @@ fn upgrades_panel(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
                     })
                     .with_children(|p| {
                         ui_text(p, def.name, 18.0, C_TXT, assets, true);
-                        marker_text(p, format!("等级 {}/{}", 0, def.max_level).as_str(), 14.0, C_SOFT, assets, false, UpgradeLevel(i));
+                        marker_text(
+                            p,
+                            format!("等级 {}/{}", 0, def.max_level).as_str(),
+                            14.0,
+                            C_SOFT,
+                            assets,
+                            false,
+                            UpgradeLevel(i),
+                        );
                         p.spawn(Node {
                             flex_grow: 1.0,
                             ..default()
                         });
-                        spawn_button(p, ButtonKind::BuyUpgrade(i), format!("{}g", def.costs[0]).as_str(), Val::Px(110.0), 36.0, C_GOLD, assets);
+                        spawn_button(
+                            p,
+                            ButtonKind::BuyUpgrade(i),
+                            format!("{}g", def.costs[0]).as_str(),
+                            Val::Px(110.0),
+                            36.0,
+                            C_GOLD,
+                            assets,
+                        );
                     });
                     ui_text(p, def.desc, 14.0, C_HINT, assets, false);
                 });
@@ -609,7 +751,15 @@ fn upgrades_panel(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
         })
         .with_children(|p| {
             marker_text(p, "金币：0g", 18.0, C_GOLD, assets, true, UpgradeGold);
-            spawn_button(p, ButtonKind::OpenPanel(GameScreen::Playing), "返回柜台", Val::Px(160.0), 42.0, C_BORDER_HI, assets);
+            spawn_button(
+                p,
+                ButtonKind::OpenPanel(GameScreen::Playing),
+                "返回柜台",
+                Val::Px(160.0),
+                42.0,
+                C_BORDER_HI,
+                assets,
+            );
         });
     });
 }
@@ -685,7 +835,15 @@ fn recipe_book_panel(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
             ..default()
         })
         .with_children(|p| {
-            spawn_button(p, ButtonKind::OpenPanel(GameScreen::Playing), "返回柜台", Val::Px(160.0), 42.0, C_BORDER_HI, assets);
+            spawn_button(
+                p,
+                ButtonKind::OpenPanel(GameScreen::Playing),
+                "返回柜台",
+                Val::Px(160.0),
+                42.0,
+                C_BORDER_HI,
+                assets,
+            );
         });
     });
 }
@@ -758,8 +916,24 @@ fn day_report_panel(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
             ..default()
         })
         .with_children(|p| {
-            spawn_button(p, ButtonKind::Continue, "继续营业", Val::Px(180.0), 46.0, C_GREEN, assets);
-            spawn_button(p, ButtonKind::Restart, "回标题", Val::Px(140.0), 46.0, C_BORDER_HI, assets);
+            spawn_button(
+                p,
+                ButtonKind::Continue,
+                "继续营业",
+                Val::Px(180.0),
+                46.0,
+                C_GREEN,
+                assets,
+            );
+            spawn_button(
+                p,
+                ButtonKind::Restart,
+                "回标题",
+                Val::Px(140.0),
+                46.0,
+                C_BORDER_HI,
+                assets,
+            );
         });
     });
 }
@@ -803,7 +977,15 @@ fn game_over_panel(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
         ui_text(p, "破产了！", 48.0, C_RED, assets, true);
         ui_text(p, "租金交不起了，药铺关门了。", 18.0, C_SOFT, assets, false);
         marker_text(p, "", 20.0, C_TXT, assets, false, EndText);
-        spawn_button(p, ButtonKind::Restart, "重新开始", Val::Px(200.0), 48.0, C_GOLD, assets);
+        spawn_button(
+            p,
+            ButtonKind::Restart,
+            "重新开始",
+            Val::Px(200.0),
+            48.0,
+            C_GOLD,
+            assets,
+        );
         ui_text(p, "按 Enter 也可返回标题", 14.0, C_HINT, assets, false);
     });
 }
@@ -825,7 +1007,15 @@ fn victory_panel(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
         ui_text(p, "炼金大师", 48.0, C_GOLD, assets, true);
         ui_text(p, "你的声望已成为传奇。", 20.0, C_SOFT, assets, false);
         marker_text(p, "", 20.0, C_TXT, assets, false, EndText);
-        spawn_button(p, ButtonKind::Restart, "返回标题", Val::Px(200.0), 48.0, C_GOLD, assets);
+        spawn_button(
+            p,
+            ButtonKind::Restart,
+            "返回标题",
+            Val::Px(200.0),
+            48.0,
+            C_GOLD,
+            assets,
+        );
         ui_text(p, "按 Enter 也可返回标题", 14.0, C_HINT, assets, false);
     });
 }
@@ -863,9 +1053,33 @@ fn pause_overlay(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
         ))
         .with_children(|p| {
             ui_text(p, "暂停", 30.0, C_GOLD, assets, true);
-            spawn_button(p, ButtonKind::Resume, "继续营业", Val::Px(240.0), 46.0, C_GREEN, assets);
-            spawn_button(p, ButtonKind::Restart, "返回标题", Val::Px(240.0), 46.0, C_BORDER_HI, assets);
-            spawn_button(p, ButtonKind::Quit, "退出游戏", Val::Px(240.0), 46.0, C_RED, assets);
+            spawn_button(
+                p,
+                ButtonKind::Resume,
+                "继续营业",
+                Val::Px(240.0),
+                46.0,
+                C_GREEN,
+                assets,
+            );
+            spawn_button(
+                p,
+                ButtonKind::Restart,
+                "返回标题",
+                Val::Px(240.0),
+                46.0,
+                C_BORDER_HI,
+                assets,
+            );
+            spawn_button(
+                p,
+                ButtonKind::Quit,
+                "退出游戏",
+                Val::Px(240.0),
+                46.0,
+                C_RED,
+                assets,
+            );
             ui_text(p, "Esc / P 继续", 14.0, C_HINT, assets, false);
         });
     });
@@ -911,10 +1125,7 @@ fn tutorial_banner(p: &mut ChildSpawnerCommands, assets: &AssetServer) {
 /// Navigate between gameplay screens (market / upgrades / recipe book / back).
 /// `OpenPanel` is written by the HUD buttons and the Tab key; this system is
 /// the single place that turns it into a real state transition.
-fn panel_navigation(
-    mut actions: MessageReader<UiAction>,
-    mut next: ResMut<NextState<GameScreen>>,
-) {
+fn panel_navigation(mut actions: MessageReader<UiAction>, mut next: ResMut<NextState<GameScreen>>) {
     for a in actions.read() {
         if let UiAction::OpenPanel(p) = a {
             next.set(*p);
@@ -933,7 +1144,10 @@ fn panel_visibility(state: Res<State<GameScreen>>, mut q: Query<(&Panel, &mut Vi
     }
 }
 
-fn update_pause_overlay(paused: Res<Paused>, mut q: Query<&mut Visibility, With<PausedOverlayRoot>>) {
+fn update_pause_overlay(
+    paused: Res<Paused>,
+    mut q: Query<&mut Visibility, With<PausedOverlayRoot>>,
+) {
     if let Ok(mut v) = q.single_mut() {
         *v = if paused.0 {
             Visibility::Visible

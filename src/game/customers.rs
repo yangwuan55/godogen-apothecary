@@ -39,7 +39,9 @@ impl Plugin for CustomersPlugin {
         );
         app.add_systems(
             Update,
-            update_brewing.after(InputSet).run_if(playing_and_not_paused),
+            update_brewing
+                .after(InputSet)
+                .run_if(playing_and_not_paused),
         );
     }
 }
@@ -104,31 +106,12 @@ fn spawn_one_customer(
     let kind_idx = pick_weighted(&unlocked, econ.rep_level);
 
     let kind = &CUSTOMER_KINDS[kind_idx];
-    let available: Vec<usize> = RECIPES
-        .iter()
-        .enumerate()
-        .filter(|(_, r)| {
-            r.tier >= kind.min_tier && r.tier <= kind.max_tier && r.tier <= econ.rep_level
-        })
-        .map(|(i, _)| i)
-        .collect();
-    let recipe_idx = if available.is_empty() {
-        let any: Vec<usize> = RECIPES
-            .iter()
-            .enumerate()
-            .filter(|(_, r)| r.tier <= econ.rep_level)
-            .map(|(i, _)| i)
-            .collect();
-        if any.is_empty() {
-            return;
-        }
-        any[rand_idx(any.len())]
-    } else {
-        available[rand_idx(available.len())]
-    };
-
     let budget = (kind.budget_min as f32 + rand01() * (kind.budget_max - kind.budget_min) as f32)
         .round() as u32;
+    if RECIPES.iter().all(|r| r.tier > econ.rep_level) {
+        return;
+    }
+    let recipe_idx = pick_recipe(kind.min_tier, kind.max_tier, econ.rep_level, budget);
     let patience = kind.patience * (0.8 + 0.4 * rand01());
     let target_pos = Vec2::new(COUNTER_POS.x + slot as f32 * QUEUE_OFFSET, COUNTER_POS.y);
 
@@ -143,6 +126,43 @@ fn spawn_one_customer(
         slot,
     );
     queue.spawned_today += 1;
+}
+
+/// Choose a recipe index for a customer.
+///
+/// Pool = recipes within the kind's tier window that reputation allows; if
+/// that pool is empty, fall back to any unlocked tier. Within the pool,
+/// prefer recipes the customer can afford (`base_price <= budget`); only fall
+/// back to unaffordable picks when nothing in the pool is affordable (e.g.
+/// low-budget kinds like 孩童 must still be able to order).
+pub fn pick_recipe(min_tier: u8, max_tier: u8, rep_level: u8, budget: u32) -> usize {
+    let unlocked: Vec<usize> = RECIPES
+        .iter()
+        .enumerate()
+        .filter(|(_, r)| r.tier >= min_tier && r.tier <= max_tier && r.tier <= rep_level)
+        .map(|(i, _)| i)
+        .collect();
+    let pool = if unlocked.is_empty() {
+        RECIPES
+            .iter()
+            .enumerate()
+            .filter(|(_, r)| r.tier <= rep_level)
+            .map(|(i, _)| i)
+            .collect()
+    } else {
+        unlocked
+    };
+    let affordable: Vec<usize> = pool
+        .iter()
+        .copied()
+        .filter(|&i| RECIPES[i].base_price <= budget)
+        .collect();
+    let final_pool = if affordable.is_empty() {
+        pool
+    } else {
+        affordable
+    };
+    final_pool[rand_idx(final_pool.len())]
 }
 
 fn pick_weighted(indices: &[usize], rep_level: u8) -> usize {
@@ -305,24 +325,24 @@ fn tick_patience(
     time: Res<Time>,
     mut q: Query<(Entity, &mut Customer)>,
     mut econ: ResMut<Economy>,
-    mut brewing: ResMut<Brewing>,
     mut fx: MessageWriter<FxEvent>,
 ) {
+    // Patience only runs while still queuing. Once accepted (Served) the shop
+    // holds their order, so the clock freezes — a brewing potion can never be
+    // lost to someone else's (or even the buyer's) impatience.
     for (_e, mut c) in &mut q {
-        if c.state == CustomerState::Waiting || c.state == CustomerState::Served {
-            c.patience -= time.delta_secs();
-            if c.patience <= 0.0 && c.state != CustomerState::Leaving {
-                if brewing.active {
-                    brewing.active = false; // aborted order
-                }
-                c.state = CustomerState::Leaving;
-                econ.lost += 1;
-                fx.write(FxEvent {
-                    kind: FxKind::Fizzle,
-                    pos: Vec2::new(COUNTER_POS.x + 60.0, COUNTER_POS.y + 70.0),
-                    text: Some("顾客离开了".into()),
-                });
-            }
+        if c.state != CustomerState::Waiting {
+            continue;
+        }
+        c.patience -= time.delta_secs();
+        if c.patience <= 0.0 {
+            c.state = CustomerState::Leaving;
+            econ.lost += 1;
+            fx.write(FxEvent {
+                kind: FxKind::Fizzle,
+                pos: Vec2::new(COUNTER_POS.x + 60.0, COUNTER_POS.y + 70.0),
+                text: Some("等不及了，转身离开".into()),
+            });
         }
     }
 }
@@ -434,11 +454,14 @@ fn update_bubbles(
         for child in children {
             if let Ok((mut text, mut color, mut bg, mut t)) = bubbles.get_mut(*child) {
                 let ratio = (c.patience / c.patience_max).clamp(0.0, 1.0);
-                let urgent = ratio < 0.25 && (c.state == CustomerState::Waiting || c.state == CustomerState::Served);
+                let urgent = ratio < 0.25
+                    && (c.state == CustomerState::Waiting || c.state == CustomerState::Served);
                 let (txt, txt_col, bg_col) = match c.state {
-                    CustomerState::Walking => {
-                        ("".to_string(), Color::srgb(0.95, 0.95, 1.0), Color::srgba(0.10, 0.12, 0.25, 0.88))
-                    }
+                    CustomerState::Walking => (
+                        "".to_string(),
+                        Color::srgb(0.95, 0.95, 1.0),
+                        Color::srgba(0.10, 0.12, 0.25, 0.88),
+                    ),
                     CustomerState::Waiting => {
                         let recipe = &RECIPES[c.recipe_idx];
                         if urgent {
@@ -457,9 +480,17 @@ fn update_bubbles(
                     }
                     CustomerState::Served => {
                         if urgent {
-                            ("还没好吗？！".to_string(), Color::srgb(1.0, 0.45, 0.45), Color::srgba(0.35, 0.06, 0.06, 0.92))
+                            (
+                                "还没好吗？！".to_string(),
+                                Color::srgb(1.0, 0.45, 0.45),
+                                Color::srgba(0.35, 0.06, 0.06, 0.92),
+                            )
                         } else {
-                            ("在熬了…".to_string(), Color::srgb(0.9, 0.9, 0.95), Color::srgba(0.10, 0.12, 0.25, 0.88))
+                            (
+                                "在熬了…".to_string(),
+                                Color::srgb(0.9, 0.9, 0.95),
+                                Color::srgba(0.10, 0.12, 0.25, 0.88),
+                            )
                         }
                     }
                     CustomerState::Leaving => (

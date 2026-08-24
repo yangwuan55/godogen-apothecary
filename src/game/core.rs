@@ -27,6 +27,7 @@ impl Plugin for CorePlugin {
             .insert_resource(Paused::default())
             .insert_resource(TempControl::default())
             .insert_resource(TutorialSettings::default())
+            .init_resource::<ForceDayEnd>()
             .add_plugins((
                 InputPlugin,
                 CustomersPlugin,
@@ -63,10 +64,7 @@ fn setup(mut commands: Commands, window_camera: Res<WindowCamera>) {
 }
 
 /// Starting the game from the title screen (button click or Enter key).
-fn title_start(
-    mut actions: MessageReader<UiAction>,
-    mut next: ResMut<NextState<GameScreen>>,
-) {
+fn title_start(mut actions: MessageReader<UiAction>, mut next: ResMut<NextState<GameScreen>>) {
     if actions.read().any(|a| *a == UiAction::StartGame) {
         next.set(GameScreen::Playing);
     }

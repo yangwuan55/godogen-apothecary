@@ -217,7 +217,9 @@ fn cauldron_liquid(
     time: Res<Time>,
     mut q: Query<&mut Sprite, With<CauldronLiquid>>,
 ) {
-    let Ok(mut sprite) = q.single_mut() else { return };
+    let Ok(mut sprite) = q.single_mut() else {
+        return;
+    };
     if !brewing.active {
         sprite.color = Color::srgba(0.30, 0.60, 0.85, 0.45);
         return;

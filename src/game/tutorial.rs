@@ -71,9 +71,7 @@ fn advance_tutorial(
         return;
     }
 
-    let waiting = customers
-        .iter()
-        .any(|c| c.state == CustomerState::Waiting);
+    let waiting = customers.iter().any(|c| c.state == CustomerState::Waiting);
 
     // Advance the step machine.
     match tut.step {
@@ -144,10 +142,7 @@ fn advance_tutorial(
 }
 
 /// Text + highlight target for the current step.
-fn step_text(
-    tut: &Tutorial,
-    brewing: &Brewing,
-) -> (String, Option<ButtonKind>) {
+fn step_text(tut: &Tutorial, brewing: &Brewing) -> (String, Option<ButtonKind>) {
     match tut.step {
         0 => (
             "顾客来了！头顶气泡会说明他们要买什么。点「接单」接下订单。".to_string(),
