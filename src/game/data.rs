@@ -168,7 +168,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
     RecipeDef {
         name: "烈焰软膏",
         mats: &[4, 5],
-        base_price: 40,
+        base_price: 44,
         temp_min: 65.0,
         temp_max: 95.0,
         brew_time: 8.0,
@@ -201,7 +201,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
     RecipeDef {
         name: "心花之酿",
         mats: &[1, 11],
-        base_price: 55,
+        base_price: 75,
         temp_min: 25.0,
         temp_max: 55.0,
         brew_time: 9.0,
@@ -212,7 +212,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
     RecipeDef {
         name: "勇气药水",
         mats: &[7, 8],
-        base_price: 70,
+        base_price: 80,
         temp_min: 55.0,
         temp_max: 85.0,
         brew_time: 9.5,
@@ -223,7 +223,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
     RecipeDef {
         name: "石肤药剂",
         mats: &[4, 3, 6],
-        base_price: 85,
+        base_price: 75,
         temp_min: 40.0,
         temp_max: 70.0,
         brew_time: 10.0,
@@ -234,7 +234,7 @@ pub const RECIPES: [RecipeDef; NUM_RECIPES] = [
     RecipeDef {
         name: "隐身药剂",
         mats: &[6, 5],
-        base_price: 90,
+        base_price: 68,
         temp_min: 20.0,
         temp_max: 50.0,
         brew_time: 10.5,
@@ -429,7 +429,7 @@ pub const UPGRADES: [UpgradeDef; 4] = [
         name: "招牌",
         desc: "每天更多顾客 + 声望",
         max_level: 3,
-        costs: [35, 85, 180],
+        costs: [55, 110, 190],
     },
 ];
 
@@ -474,6 +474,27 @@ impl Quality {
             Quality::Good => 3,
             Quality::Perfect => 5,
         }
+    }
+}
+
+/// Extra reputation granted by recipe tier, so unlocking higher tiers also
+/// accelerates the climb (progression should feel like acceleration).
+pub fn tier_rep_bonus(tier: u8) -> u32 {
+    match tier {
+        3 => 2,
+        2 => 1,
+        _ => 0,
+    }
+}
+
+pub const KIND_NOBLE: usize = 5; // 贵族
+pub const KIND_ALCHEMIST: usize = 6; // 炼金术士
+
+/// Extra reputation from high-society customers.
+pub fn kind_rep_bonus(kind_idx: usize) -> u32 {
+    match kind_idx {
+        KIND_NOBLE | KIND_ALCHEMIST => 1,
+        _ => 0,
     }
 }
 

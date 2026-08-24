@@ -82,6 +82,12 @@ fn day_report_continue(
     econ.day_elapsed = 0.0;
     econ.day_income = 0;
     econ.day_quality = [0; 4];
-    econ.rent += 1;
+    econ.rent = rent_for_level(econ.rep_level);
     next.set(GameScreen::Playing);
+}
+
+/// Daily rent scales with reputation so the day-end bill stays a real decision.
+/// `Lv1 -> 15` keeps the day-1 balance identical to the legacy curve.
+pub fn rent_for_level(rep_level: u8) -> u32 {
+    7 + 8 * rep_level as u32
 }

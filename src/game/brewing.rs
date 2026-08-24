@@ -6,7 +6,9 @@
 use super::actions::UiAction;
 use super::audio::SfxRequest;
 use super::customers::COUNTER_POS;
-use super::data::{Quality, RECIPES, UpgradeId, quality_from_score};
+use super::data::{
+    Quality, RECIPES, UpgradeId, kind_rep_bonus, quality_from_score, tier_rep_bonus,
+};
 use super::resources::{
     Brewing, Customer, CustomerState, Economy, FxEvent, FxKind, TempControl, UpgradesState,
 };
@@ -101,14 +103,13 @@ pub fn update_brewing(
                 });
                 sfx.write(SfxRequest::Stir);
             }
-        } else if brewing.progress > at + 20.0 {
-            brewing.stir_hits[i] = true; // missed
         }
+        // Windows that lapse unhit stay `false`: a miss must not count as a
+        // hit in the quality score (previously misses inflated quality).
     }
 
     // --- Finish ---
     if brewing.progress >= 100.0 {
-        finish_brew(&mut brewing, &mut econ, &mut fx, &mut sfx);
         // The front served customer receives the potion and leaves happily.
         let mut front_e: Option<Entity> = None;
         let mut best = u32::MAX;
@@ -118,6 +119,10 @@ pub fn update_brewing(
                 front_e = Some(e);
             }
         }
+        let served_kind = front_e
+            .and_then(|e| customers.get(e).ok())
+            .map(|(_, c)| c.kind_idx);
+        finish_brew(&mut brewing, &mut econ, &mut fx, &mut sfx, served_kind);
         if let Some(e) = front_e {
             if let Ok((_, mut c)) = customers.get_mut(e) {
                 c.state = CustomerState::Leaving;
@@ -136,6 +141,7 @@ fn finish_brew(
     econ: &mut Economy,
     fx: &mut MessageWriter<FxEvent>,
     sfx: &mut MessageWriter<SfxRequest>,
+    served_kind: Option<usize>,
 ) {
     let recipe = &RECIPES[brewing.recipe_idx];
 
@@ -158,7 +164,7 @@ fn finish_brew(
     let earned = ((recipe.base_price as f32) * q.price_mult()).round() as u32;
     econ.gold += earned;
     econ.day_income += earned;
-    let rep = q.rep_gain();
+    let rep = q.rep_gain() + tier_rep_bonus(recipe.tier) + served_kind.map_or(0, kind_rep_bonus);
     econ.reputation += rep;
     econ.day_quality[q_idx(q)] += 1;
     if q == Quality::Perfect {

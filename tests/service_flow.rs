@@ -9,9 +9,10 @@
 use bevy::prelude::*;
 use godogen_apothecary::build_app;
 use godogen_apothecary::game::customers::{COUNTER_POS, pick_recipe};
-use godogen_apothecary::game::data::RECIPES;
+use godogen_apothecary::game::data::{CUSTOMER_KINDS, KIND_NOBLE, RECIPES, SIGN_CUSTOMERS};
+use godogen_apothecary::game::economy::rent_for_level;
 use godogen_apothecary::game::resources::{
-    Brewing, Customer, CustomerState, Economy, GameScreen, Inventory,
+    Brewing, Customer, CustomerQueue, CustomerState, Economy, GameScreen, Inventory,
 };
 use std::time::Duration;
 
@@ -52,7 +53,13 @@ fn headless_app() -> App {
         frame: 0,
         presses: vec![],
     });
-    app.add_systems(PreUpdate, drive.after(bevy::input::InputSystems));
+    app.insert_resource(AutoAccept(false));
+    app.add_systems(
+        PreUpdate,
+        (drive, auto_accept)
+            .chain()
+            .after(bevy::input::InputSystems),
+    );
     app
 }
 
@@ -81,12 +88,36 @@ fn start_game(app: &mut App) {
         .push((5, KeyCode::Enter));
 }
 
+/// When armed, presses 接单 whenever the cauldron is free and someone waits.
+#[derive(Resource)]
+struct AutoAccept(bool);
+
+fn auto_accept(
+    mut input: ResMut<ButtonInput<KeyCode>>,
+    brewing: Res<Brewing>,
+    customers: Query<&Customer>,
+    flag: Res<AutoAccept>,
+) {
+    if !flag.0 || brewing.active {
+        return;
+    }
+    if customers.iter().any(|c| c.state == CustomerState::Waiting) {
+        input.press(KeyCode::Enter);
+    }
+}
+
 /// Spawn a bare logic-level customer (visual children are irrelevant here).
-fn spawn_customer(app: &mut App, slot: u32, recipe_idx: usize, patience: f32) -> Entity {
+fn spawn_customer(
+    app: &mut App,
+    slot: u32,
+    kind_idx: usize,
+    recipe_idx: usize,
+    patience: f32,
+) -> Entity {
     app.world_mut()
         .spawn((
             Customer {
-                kind_idx: 0,
+                kind_idx,
                 recipe_idx,
                 patience,
                 patience_max: patience,
@@ -137,8 +168,8 @@ fn a_queuer_timeout_keeps_brew_alive() {
     start_game(&mut app);
     run(&mut app, 10); // reach Playing
     fill_inventory(&mut app, 9);
-    spawn_customer(&mut app, 0, 0, 100.0); // front, long patience
-    spawn_customer(&mut app, 1, 1, 0.25); // rear, expires in ~8 frames
+    spawn_customer(&mut app, 0, 0, 0, 100.0); // front, long patience
+    spawn_customer(&mut app, 1, 0, 1, 0.25); // rear, expires in ~8 frames
     app.world_mut()
         .resource_mut::<Driver>()
         .presses
@@ -166,7 +197,7 @@ fn b_served_patience_is_frozen() {
     start_game(&mut app);
     run(&mut app, 10);
     fill_inventory(&mut app, 9);
-    spawn_customer(&mut app, 0, 0, 0.3); // would expire ~9 frames if ticking
+    spawn_customer(&mut app, 0, 0, 0, 0.3); // would expire ~9 frames if ticking
     app.world_mut()
         .resource_mut::<Driver>()
         .presses
@@ -214,4 +245,80 @@ fn c_pick_recipe_respects_budget_and_tiers() {
         let idx = pick_recipe(2, 2, 1, 999);
         assert_eq!(RECIPES[idx].tier, 1);
     }
+}
+
+// --- Case E: rent curve keeps Lv1 at 15 and scales with reputation ----------
+#[test]
+fn e_rent_curve() {
+    assert_eq!(rent_for_level(1), 15, "day-1 rent must stay identical");
+    assert_eq!(rent_for_level(2), 23);
+    assert_eq!(rent_for_level(5), 47);
+    assert_eq!(rent_for_level(9), 79);
+}
+
+// --- Case F: tier + customer-kind reputation layering -----------------------
+#[test]
+fn f_rep_layering_noble_t3() {
+    let mut app = headless_app();
+    start_game(&mut app);
+    run(&mut app, 10);
+    fill_inventory(&mut app, 9);
+    // 贵族 (kind 5) orders 隐身药剂 (T3, 68g): temp pins to 50 inside [20,50]
+    // -> window_ratio 1.0, no stirs -> score 0.75 = Good.
+    spawn_customer(&mut app, 0, KIND_NOBLE, 9, 0.3);
+    app.world_mut()
+        .resource_mut::<Driver>()
+        .presses
+        .push((12, KeyCode::Enter));
+
+    run(&mut app, 700); // brew ~10.5s + margin
+    let econ = app.world().resource::<Economy>();
+    let r9 = &RECIPES[9];
+    eprintln!(
+        "DEBUG rep={} gold={} quality={:?} served={} | r9 tier={} price={}",
+        econ.reputation, econ.gold, econ.day_quality, econ.served, r9.tier, r9.base_price
+    );
+    // Good base 3 + T3 bonus 2 + 贵族 bonus 1
+    assert_eq!(econ.reputation, 6, "3+2+1 expected");
+    let price = RECIPES[9].base_price as f32;
+    assert_eq!(econ.gold, 60 + (price * 1.35).round() as u32);
+    assert_eq!(econ.served, 1);
+}
+
+// --- Case H: deterministic whole-day economy --------------------------------
+#[test]
+fn h_whole_day_net_is_exact() {
+    let mut app = headless_app();
+    start_game(&mut app);
+    run(&mut app, 10);
+    fill_inventory(&mut app, 9);
+    app.world_mut().resource_mut::<AutoAccept>().0 = true;
+    // Suppress natural spawns for determinism.
+    app.world_mut()
+        .resource_mut::<CustomerQueue>()
+        .spawned_today = SIGN_CUSTOMERS[0];
+    // Three farmers, T1 recipes, long patience.
+    spawn_customer(&mut app, 0, 0, 0, 300.0); // 治愈 15g
+    spawn_customer(&mut app, 1, 0, 1, 300.0); // 魔力 18g
+    spawn_customer(&mut app, 2, 0, 2, 300.0); // 力量 20g
+
+    run(&mut app, 2400); // past the 75s day end
+
+    let state = *app.world().resource::<State<GameScreen>>().get();
+    assert_eq!(state, GameScreen::DayReport, "day must have ended");
+    let econ = app.world().resource::<Economy>();
+    // All-Good sales: round(15*1.35)=20, round(18*1.35)=24, round(20*1.35)=27
+    let income = 20 + 24 + 27;
+    assert_eq!(econ.day_income, income, "sale amounts");
+    assert_eq!(econ.served, 3);
+    assert_eq!(econ.lost, 0);
+    assert_eq!(econ.reputation, 9, "three Goods, no bonuses on T1/farmers");
+    // Materials were conjured by the harness (no purchase), so only rent comes out.
+    assert_eq!(econ.gold, 60 + income - 15);
+}
+
+// keep CUSTOMER_KINDS referenced (guards accidental data reshuffles)
+#[test]
+fn kind_table_order_stable() {
+    assert_eq!(CUSTOMER_KINDS[KIND_NOBLE].name, "贵族");
 }
